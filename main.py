@@ -157,13 +157,7 @@ class РусВПитон:
             культурный += self.транслировать_строку(чота)
             культурный_код += ("	" * self.табов) + культурный + "\n"
         print("\r100% транслировано... " + makebar(1, 1, 30), end='')
-        выход = open(self.имя + ".py", 'w', encoding='utf-8')
-        if reformat:
-            выход.write(reformat(культурный_код))
-        else:
-            выход.write(культурный_код)
-        выход.close()
-        print(f"Сохранено как {self.имя}.py")
+        return культурный_код
 
 
 if args.rf == False and args.f == "":
@@ -190,7 +184,14 @@ else:
 файл = args.file
 try:
     транслятор = РусВПитон(0, f"./{файл}")
-    транслятор.транслировать()
+    транслированный = транслятор.транслировать()
+    выход = open(транслятор.имя + ".py", 'w', encoding='utf-8')
+    if reformat:
+        выход.write(reformat(транслированный))
+    else:
+        выход.write(транслированный)
+    выход.close()
+    print(f"Сохранено как {транслятор.имя}.py")
 except FileNotFoundError:
     print("Файл не найден")
 except Exception:
