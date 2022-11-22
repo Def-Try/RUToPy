@@ -1,9 +1,23 @@
-try:
-    from autopep8 import fix_code as reformat
-except ModuleNotFoundError:
-    reformat = False
-    print("Установите модуль autopep8 для автоматической очистки кода после трансляции.")
+import argparse
+import sys
+from io import StringIO
+import contextlib
 
+@contextlib.contextmanager
+def stdoutIO(stdout=None):
+    old = sys.stdout
+    if stdout is None:
+        stdout = StringIO()
+    sys.stdout = stdout
+    yield stdout
+    sys.stdout = old
+
+parser = argparse.ArgumentParser(description='Переводит русский язык в код питона. Вызовите без аргументов для командной строки.')
+
+parser.add_argument('--rf', type=bool, default=False, help='Реформатировать код после трансляции')
+parser.add_argument('-f', type=str, default="", help='Файл для трансляции')
+
+args = parser.parse_args()
 
 def indexoflast(string, char):
     index = 0
@@ -62,7 +76,7 @@ class РусВПитон:
     def __init__(self, табов, файлкода):
         self.табов = табов
         self.имя = файлкода
-        self.файл = open(файлкода, 'r', encoding='utf-8')
+        self.файл = open(файлкода, 'r', encoding='utf-8') if файлкода != "" else ""
 
     @staticmethod
     def токенизировать(строка):
@@ -143,7 +157,6 @@ class РусВПитон:
             культурный += self.транслировать_строку(чота)
             культурный_код += ("	" * self.табов) + культурный + "\n"
         print("\r100% транслировано... " + makebar(1, 1, 30), end='')
-        print(f"\n{'СОХРАНЕНИЕ ФАЙЛА':-^50}")
         выход = open(self.имя + ".py", 'w', encoding='utf-8')
         if reformat:
             выход.write(reformat(культурный_код))
@@ -153,13 +166,39 @@ class РусВПитон:
         print(f"Сохранено как {self.имя}.py")
 
 
-файл = input("Введите имя файла: ")
+if args.rf == False and args.f == "":
+    транслятор = РусВПитон(0, f"")
+    while True:
+        код = input(">>> ")
+        if код.endswith("\\"):
+            while код.endswith("\\"):
+                код += input("... ")
+
+        with stdoutIO() as s:
+            exec(транслятор.транслировать_строку(код.replace("\\", "\n")))
+        print(s.getvalue())
+
+if args.rf:
+    try:
+        from autopep8 import fix_code as reformat
+    except ModuleNotFoundError:
+        reformat = False
+        print("Установите модуль autopep8 для очистки кода после трансляции.")
+else:
+    reformat = False
+
+файл = args.file
 try:
     транслятор = РусВПитон(0, f"./{файл}")
-    print(f"{'ТРАНСЛЯЦИЯ КОДА':-^50}")
     транслятор.транслировать()
 except FileNotFoundError:
     print("Файл не найден")
 except Exception:
     print("Что-то пошло не так")
 exit()
+'''
+функция факториал(н) то \
+    если н равно 0 то вернуть 1 \
+    иначе вернуть н * факториал(н-1) \
+print(факториал(5))
+'''
